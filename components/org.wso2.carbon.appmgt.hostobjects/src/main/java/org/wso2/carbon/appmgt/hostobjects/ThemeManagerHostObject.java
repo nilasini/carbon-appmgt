@@ -362,7 +362,9 @@ public class ThemeManagerHostObject extends ScriptableObject {
 
             while (ze != null) {
                 String fileName = ze.getName();
-                Path newFilePath = themePath.resolve(fileName);
+                String intendedDir = themePath.toAbsolutePath().toString();
+                String appendedName = Paths.get(intendedDir, fileName).toString();
+                Path newFilePath = Paths.get(validateFilename(appendedName, intendedDir));
                 if (ze.isDirectory()) {
                     if (!Files.exists(newFilePath)) {
                         createDirectory(newFilePath);
@@ -404,6 +406,21 @@ public class ThemeManagerHostObject extends ScriptableObject {
         }
     }
 
+    private static String validateFilename(String filename, String intendedDir)
+            throws java.io.IOException {
+
+        File f = new File(filename);
+        String canonicalPath = f.getCanonicalPath();
+
+        File iD = new File(intendedDir);
+        String canonicalID = iD.getCanonicalPath();
+
+        if (canonicalPath.startsWith(canonicalID)) {
+            return canonicalPath;
+        } else {
+            throw new IllegalStateException("File is outside extraction target directory.");
+        }
+    }
 
     private static void createDirectory(Path directoryPath) throws AppManagementException {
         try {
